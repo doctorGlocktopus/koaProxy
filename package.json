@@ -40,7 +40,7 @@
     "koa": "^2.13.4",
     "koa-compose": "^4.1.0",
     "koa-convert": "^2.0.0",
-    "koa-proxy": "^1.0.0-alpha.3",
+    "koa-proxies": "^0.12.2",
     "media-typer": "^0.3.0",
     "methods": "^1.1.2",
     "mime-db": "^1.52.0",

@@ -12,8 +12,14 @@ app.use(cors())
 const PATH_DOMAIN_MAP = {
     "ams": {
         fullUrl: "https://www.auto-motor-und-sport.de",
-        suffixFile:'/thenewsbar/static/pw.js',
+        suffixFile:'/static/pw.js',
         suffix:'/thenewsbar'
+    },
+    "googleAdd": {
+        url: "www.googletagmanager.com",
+        fullUrl: "https://www.googletagmanager.com",
+        suffixFile: "/gtm.js?id=GTM-P9H4MZM",
+        strangeString: '"https://www.googletagmanager.com/a?id="+Qg.M+"&cv=266",Yh={label:Qg.M+"',
     },
     'googleAnalytics': {
         url: "www.google-analytics.com",
@@ -21,12 +27,6 @@ const PATH_DOMAIN_MAP = {
         suffix: "/gtm/js?id=",
         suffixFile: "/analytics.js",
         strangeString: '"https://www.google-analytics.com/debug/bootstrap?id="+a.get(Na)+"&src=LEGACY&cond="+b'
-    },
-    "googleAdd": {
-        url: "www.googletagmanager.com",
-        fullUrl: "https://www.googletagmanager.com",
-        suffixFile: "/gtm.js?id=GTM-P9H4MZM",
-        strangeString: '"https://www.googletagmanager.com/a?id="+Qg.M+"&cv=266",Yh={label:Qg.M+"',
     },
     'thenewsbar': {
         name: "thenewsbar",
@@ -38,29 +38,31 @@ const PATH_DOMAIN_MAP = {
 
 
 app.use(async (ctx, next) => {
-    switch (ctx.host) {
-
-        case PATH_DOMAIN_MAP.ams:
+    switch (ctx.originalUrl) {
+        case PATH_DOMAIN_MAP.ams.suffix + PATH_DOMAIN_MAP.ams.suffixFile:
             await blend(PATH_DOMAIN_MAP.ams)
             break;
-        case "localhost:8000":
-        // case PATH_DOMAIN_MAP.googleAdd.fullUrl:
+        case PATH_DOMAIN_MAP.googleAdd.suffixFile:
+            console.log(1)
             await blend(PATH_DOMAIN_MAP.googleAdd)
             break;
-        case PATH_DOMAIN_MAP.googleAnalytics.url:
+        case PATH_DOMAIN_MAP.googleAnalytics.suffixFile:
             await blend(PATH_DOMAIN_MAP.googleAnalytics)
             break;
         default:
             break;
     }
+
 async function blend(props) {
+
+
 
         let thenewsbar = PATH_DOMAIN_MAP.thenewsbar
 
         try {
-
+            // AMS Auto-Motor-Sport
             if(props.fullUrl === PATH_DOMAIN_MAP.ams.fullUrl) {
-                let plane = await fetch(props.fullUrl + props.suffixFile)
+                let plane = await fetch(props.fullUrl + props.suffix + props.suffixFile)
                 let text = await plane.text()
                 ctx.body = text
                     .replace(props.fullUrl + props.suffix, thenewsbar.url)
@@ -68,13 +70,12 @@ async function blend(props) {
                 return next()
             }
 
+            // www.googletagmanager.com
             if(props.fullUrl === PATH_DOMAIN_MAP.googleAdd.fullUrl) {
-                console.log(props.suffixFile)
-                console.log(props.strangeString)
-
                 let plane = await fetch(props.fullUrl + props.suffixFile)
-                // header von der request benutzen
-                console.log(plane.headers)
+                // // header von der request benutzen
+                // //console.log(plane.headers)
+                // // die Header aus plane.headers extrahieren und dann übertragen
                 let text = await plane.text()
                 ctx.body = text
                     .replace(props.url, thenewsbar.url)
@@ -82,7 +83,9 @@ async function blend(props) {
                 return next()
             }
 
+            // www.google-analytics.com
             if(props.fullUrl === PATH_DOMAIN_MAP.googleAnalytics.fullUrl) {
+                console.log(props.fullUrl + props.suffixFile)
                 let plane = await fetch(props.fullUrl + props.suffixFile)
                 let text = await plane.text()
                 ctx.body = text

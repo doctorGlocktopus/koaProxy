@@ -59,6 +59,7 @@ app.use(async (ctx, next) => {
         case PATH_DOMAIN_MAP.googleAnalytics.suffixFile:
             await blend(PATH_DOMAIN_MAP.googleAnalytics)
             break;
+
         default:
             break;
     }

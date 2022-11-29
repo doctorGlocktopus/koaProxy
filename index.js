@@ -8,7 +8,7 @@ app.use(cors())
 
 const PATH_DOMAIN_MAP = {
     "ams": {
-        url: "https://www.auto-motor-und-sport.de",
+        fullUrl: "https://www.auto-motor-und-sport.de",
         suffixFile:'/thenewsbar/static/pw.js',
         suffix:'/thenewsbar'
     },
@@ -22,7 +22,7 @@ const PATH_DOMAIN_MAP = {
     "googleAdd": {
         url: "www.googletagmanager.com",
         fullUrl: "https://www.googletagmanager.com",
-        suffix: "/gtm.js?id=GTM-P9H4MZM",
+        suffixFile: "/gtm.js?id=GTM-P9H4MZM",
         strangeString: '"https://www.googletagmanager.com/a?id="+Qg.M+"&cv=266",Yh={label:Qg.M+"',
     },
     'thenewsbar': {
@@ -43,56 +43,56 @@ app.use(async (ctx, next) => {
 
     switch (ctx.host) {
 
-        //case "localhost:8000":
-
         case PATH_DOMAIN_MAP.ams:
-            let ams = PATH_DOMAIN_MAP.ams
-            await blend(ams.url, ams.suffixFile, ams.suffix)
+            await blend(PATH_DOMAIN_MAP.ams)
             break;
-
-        case PATH_DOMAIN_MAP.googleAdd.fullUrl:
-            let googleAdd = PATH_DOMAIN_MAP.googleAdd
-            await blend(googleAdd.fullUrl, googleAdd.suffix, googleAdd.url, googleAdd.strangeString)
-            break;
-
         case "localhost:8000":
-        // case PATH_DOMAIN_MAP.googleAnalytics.url:
-            let googleAnalytics = PATH_DOMAIN_MAP.googleAnalytics
-            await blend(googleAnalytics.fullUrl, googleAnalytics.suffixFile, googleAnalytics.suffix, googleAnalytics.strangeString, googleAnalytics.url)
+        // case PATH_DOMAIN_MAP.googleAdd.fullUrl:
+            await blend(PATH_DOMAIN_MAP.googleAdd)
             break;
-
+        case PATH_DOMAIN_MAP.googleAnalytics.url:
+            await blend(PATH_DOMAIN_MAP.googleAnalytics)
+            break;
         default:
             break;
     }
-
-    async function blend(fullUrl, suffixFile, suffix, strangeString, url) {
+async function blend(props) {
 
         let thenewsbar = PATH_DOMAIN_MAP.thenewsbar
 
         try {
-            let plane = await fetch(fullUrl + suffixFile)
-            let text = await plane.text()
 
-            if(fullUrl == PATH_DOMAIN_MAP.googleAdd.fullUrl) {
+            if(props.fullUrl == PATH_DOMAIN_MAP.ams.fullUrl) {
+                let plane = await fetch(props.fullUrl + props.suffixFile)
+                let text = await plane.text()
                 ctx.body = text
-                    .replace(suffix, thenewsbar.url)
-                    .replace(strangeString, thenewsbar.url + thenewsbar.suffixFile)
+                    .replace(props.fullUrl + props.suffix, thenewsbar.url)
+                    .replace(props.fullUrl, thenewsbar.url)
                 return next()
             }
-            if(fullUrl == PATH_DOMAIN_MAP.ams.url) {
+
+            if(props.fullUrl == PATH_DOMAIN_MAP.googleAdd.fullUrl) {
+                console.log(props.suffixFile)
+                console.log(props.strangeString)
+
+                let plane = await fetch(props.fullUrl + props.suffixFile)
+                let text = await plane.text()
                 ctx.body = text
-                    .replace(fullUrl + suffix, thenewsbar.url)
-                    .replace(fullUrl, thenewsbar.url)
+                    .replace(props.url, thenewsbar.url)
+                    .replace(props.strangeString, thenewsbar.url + thenewsbar.suffixFile)
                 return next()
             }
-            if(fullUrl == PATH_DOMAIN_MAP.googleAnalytics.fullUrl) {
+
+            if(props.fullUrl == PATH_DOMAIN_MAP.googleAnalytics.fullUrl) {
+                let plane = await fetch(props.fullUrl + props.suffixFile)
+                let text = await plane.text()
                 ctx.body = text
-                    .replace(fullUrl + suffix, thenewsbar.url)
-                    .replace(suffixFile, thenewsbar.url)
+                    .replace(props.fullUrl + props.suffix, thenewsbar.url)
+                    .replace(props.suffixFile, thenewsbar.url)
                     .replace("google-analytics", thenewsbar.name)   //createPolicy("google-analytics"
-                    .replace("//" + url, thenewsbar.url)
-                    .replace(strangeString, thenewsbar.url + thenewsbar.suffixFile)
-                    .replace(url, thenewsbar.url)
+                    .replace("//" + props.url, thenewsbar.url)
+                    .replace(props.strangeString, thenewsbar.url + thenewsbar.suffixFile)
+                    .replace(props.url, thenewsbar.url)
                     .replace("GoogleAnalyticsObject", "")// googleAnalyticsObject ???
                 return next()
             }
@@ -100,6 +100,41 @@ app.use(async (ctx, next) => {
             return e.message()
         }
     }
+    // async function blend(fullUrl, suffixFile, suffix, strangeString, url) {
+    //
+    //     let thenewsbar = PATH_DOMAIN_MAP.thenewsbar
+    //
+    //     try {
+    //         let plane = await fetch(fullUrl + suffixFile)
+    //         let text = await plane.text()
+    //
+    //         if(fullUrl == PATH_DOMAIN_MAP.googleAdd.fullUrl) {
+    //             ctx.body = text
+    //                 .replace(suffix, thenewsbar.url)
+    //                 .replace(strangeString, thenewsbar.url + thenewsbar.suffixFile)
+    //             return next()
+    //         }
+    //         if(fullUrl == PATH_DOMAIN_MAP.ams.url) {
+    //             ctx.body = text
+    //                 .replace(fullUrl + suffix, thenewsbar.url)
+    //                 .replace(fullUrl, thenewsbar.url)
+    //             return next()
+    //         }
+    //         if(fullUrl == PATH_DOMAIN_MAP.googleAnalytics.fullUrl) {
+    //             ctx.body = text
+    //                 .replace(fullUrl + suffix, thenewsbar.url)
+    //                 .replace(suffixFile, thenewsbar.url)
+    //                 .replace("google-analytics", thenewsbar.name)   //createPolicy("google-analytics"
+    //                 .replace("//" + url, thenewsbar.url)
+    //                 .replace(strangeString, thenewsbar.url + thenewsbar.suffixFile)
+    //                 .replace(url, thenewsbar.url)
+    //                 .replace("GoogleAnalyticsObject", "")// googleAnalyticsObject ???
+    //             return next()
+    //         }
+    //     } catch (e) {
+    //         return e.message()
+    //     }
+    // }
 });
 
 app.listen(port, function () {

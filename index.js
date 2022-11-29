@@ -38,6 +38,12 @@ const PATH_DOMAIN_MAP = {
 
 
 app.use(async (ctx, next) => {
+
+    console.log(ctx.originalUrl)
+
+    // ctx.originalUrl auseinanderbauen
+
+    //swith cases absetzen durch generischer selecter prefix focus
     switch (ctx.originalUrl) {
         // AMS Auto-Motor-Sport
         case PATH_DOMAIN_MAP.ams.suffixFile:

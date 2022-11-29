@@ -6,6 +6,9 @@ const port = process.env.PORT;
 
 app.use(cors())
 
+// erster Schritt
+
+
 const PATH_DOMAIN_MAP = {
     "ams": {
         fullUrl: "https://www.auto-motor-und-sport.de",
@@ -35,12 +38,6 @@ const PATH_DOMAIN_MAP = {
 
 
 app.use(async (ctx, next) => {
-
-    ctx.set('Access-Control-Allow-Credentials');
-    ctx.set('Access-Control-Allow-Origin', '*'); // the start allows all Origins
-    ctx.set('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    ctx.set('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE, OPTIONS');
-
     switch (ctx.host) {
 
         case PATH_DOMAIN_MAP.ams:
@@ -62,7 +59,7 @@ async function blend(props) {
 
         try {
 
-            if(props.fullUrl == PATH_DOMAIN_MAP.ams.fullUrl) {
+            if(props.fullUrl === PATH_DOMAIN_MAP.ams.fullUrl) {
                 let plane = await fetch(props.fullUrl + props.suffixFile)
                 let text = await plane.text()
                 ctx.body = text
@@ -71,11 +68,13 @@ async function blend(props) {
                 return next()
             }
 
-            if(props.fullUrl == PATH_DOMAIN_MAP.googleAdd.fullUrl) {
+            if(props.fullUrl === PATH_DOMAIN_MAP.googleAdd.fullUrl) {
                 console.log(props.suffixFile)
                 console.log(props.strangeString)
 
                 let plane = await fetch(props.fullUrl + props.suffixFile)
+                // header von der request benutzen
+                console.log(plane.headers)
                 let text = await plane.text()
                 ctx.body = text
                     .replace(props.url, thenewsbar.url)
@@ -83,7 +82,7 @@ async function blend(props) {
                 return next()
             }
 
-            if(props.fullUrl == PATH_DOMAIN_MAP.googleAnalytics.fullUrl) {
+            if(props.fullUrl === PATH_DOMAIN_MAP.googleAnalytics.fullUrl) {
                 let plane = await fetch(props.fullUrl + props.suffixFile)
                 let text = await plane.text()
                 ctx.body = text
@@ -100,41 +99,6 @@ async function blend(props) {
             return e.message()
         }
     }
-    // async function blend(fullUrl, suffixFile, suffix, strangeString, url) {
-    //
-    //     let thenewsbar = PATH_DOMAIN_MAP.thenewsbar
-    //
-    //     try {
-    //         let plane = await fetch(fullUrl + suffixFile)
-    //         let text = await plane.text()
-    //
-    //         if(fullUrl == PATH_DOMAIN_MAP.googleAdd.fullUrl) {
-    //             ctx.body = text
-    //                 .replace(suffix, thenewsbar.url)
-    //                 .replace(strangeString, thenewsbar.url + thenewsbar.suffixFile)
-    //             return next()
-    //         }
-    //         if(fullUrl == PATH_DOMAIN_MAP.ams.url) {
-    //             ctx.body = text
-    //                 .replace(fullUrl + suffix, thenewsbar.url)
-    //                 .replace(fullUrl, thenewsbar.url)
-    //             return next()
-    //         }
-    //         if(fullUrl == PATH_DOMAIN_MAP.googleAnalytics.fullUrl) {
-    //             ctx.body = text
-    //                 .replace(fullUrl + suffix, thenewsbar.url)
-    //                 .replace(suffixFile, thenewsbar.url)
-    //                 .replace("google-analytics", thenewsbar.name)   //createPolicy("google-analytics"
-    //                 .replace("//" + url, thenewsbar.url)
-    //                 .replace(strangeString, thenewsbar.url + thenewsbar.suffixFile)
-    //                 .replace(url, thenewsbar.url)
-    //                 .replace("GoogleAnalyticsObject", "")// googleAnalyticsObject ???
-    //             return next()
-    //         }
-    //     } catch (e) {
-    //         return e.message()
-    //     }
-    // }
 });
 
 app.listen(port, function () {

@@ -22,7 +22,7 @@ const PATH_DOMAIN_MAP = {
         fullUrl: "https://www.googletagmanager.com",
         suffixFile: "/gtm.js?id=GTM-P9H4MZM",
     },
-    'googleAnalytics': {
+    'google-analytics': {
         url: "www.google-analytics.com",
         fullUrl: "https://www.google-analytics.com",
         urlNoHost: "google-analytics",
@@ -41,8 +41,7 @@ const PATH_DOMAIN_MAP = {
 
 
 app.use(async (ctx, next) => {
-    // console.log(ctx.host + ctx.originalUrl)
-    // console.log(ctx.originalUrl)
+
     let thenewsbar = PATH_DOMAIN_MAP.thenewsbar;
 
     // ctx.pathname = /thennewsbar/static/pw.js?v=123
@@ -52,34 +51,34 @@ app.use(async (ctx, next) => {
     const prefix = pathParts.shift();
     // pathParts = ["static", "pw.js?v=123"]
     // prefix = "thenewsbar"
-    console.log(prefix)
+
     const proxyPath = "/" + pathParts.join("/");
-    console.log("/" + prefix + proxyPath)
     // prefix = "thenewsbar"
     // proxyPath = "/static/pw.js?v=123"
 
-    console.log(prefix)
     for(let key in PATH_DOMAIN_MAP) {
 
-
-        console.log(prefix !== key)
         // 1. prüfen ob ctx.pathname mit $key beginnt
         if(prefix !== key) {
+            console.log(prefix !== key, prefix, key)
             // 1.1 wenn nein = continue;
             continue;
         }
 
         const config = PATH_DOMAIN_MAP[key];
+
         // 2. wenn ja, fetch(config.fullUrl + ctx.pathname.replace(new Regexp(""))
         try {
-            const response = await fetch(config.url + config.proxyPath);
 
+            const response = await fetch(config.url + config.proxyPath);
+            console.log(response.headers)
+            // console.log(response.headers.get("date"))
             // foreach header uebertragen
-            // response.headers.map((headerName) => {
+            // response.map((headerName) => {
             //     // kp ob so geht
             //     const headerValue = response.headers.get(headerName);
             // });
-            // alles was in headers ist muss über ctx.set(headername, headervalue); gesetzt werden
+            // // alles was in headers ist muss über ctx.set(headername, headervalue); gesetzt werden
 
 
             // todo values replacen

@@ -1,3 +1,4 @@
+//import fetch from 'node-fetch';
 require('dotenv').config();
 const cors = require("@koa/cors");
 const Koa = require("koa");
@@ -8,13 +9,14 @@ app.use(cors())
 
 // erster Schritt
 
+// http://localhost:8000/googleAdd/analytics.js
+// http://localhost:8000/ams/static/pw.js
 
+const REPLACEMENT_DOMAIN = "http://localhost:8000";
+
+
+// PATH_DOMAIN_MAP
 const PATH_DOMAIN_MAP = {
-    "ams": {
-        fullUrl: "https://www.auto-motor-und-sport.de",
-        suffixFile:'/thenewsbar/static/pw.js',
-        suffix:'/thenewsbar'
-    },
     "googleAdd": {
         url: "www.googletagmanager.com",
         fullUrl: "https://www.googletagmanager.com",
@@ -30,6 +32,7 @@ const PATH_DOMAIN_MAP = {
     },
     'thenewsbar': {
         name: "thenewsbar",
+        proxyPath: '/static/pw.js',
         url: "https://pw.thenewsbar.net",
         suffixFile:'/static/pw.js',
         suffix:'/thenewsbar'
@@ -38,76 +41,117 @@ const PATH_DOMAIN_MAP = {
 
 
 app.use(async (ctx, next) => {
+    // console.log(ctx.host + ctx.originalUrl)
+    // console.log(ctx.originalUrl)
+    let thenewsbar = PATH_DOMAIN_MAP.thenewsbar;
 
-    console.log(ctx.originalUrl)
+    // ctx.pathname = /thennewsbar/static/pw.js?v=123
+    const pathParts = ctx.originalUrl.split("/").filter(Boolean);
+    console.log(pathParts)
+    // pathParts = ["thenewsbar", "static", "pw.js?v=123"]
+    const prefix = pathParts.shift();
+    // pathParts = ["static", "pw.js?v=123"]
+    // prefix = "thenewsbar"
+    console.log(prefix)
+    const proxyPath = "/" + pathParts.join("/");
+    console.log("/" + prefix + proxyPath)
+    // prefix = "thenewsbar"
+    // proxyPath = "/static/pw.js?v=123"
 
-    // ctx.originalUrl auseinanderbauen
+    console.log(prefix)
+    for(let key in PATH_DOMAIN_MAP) {
 
-    //swith cases absetzen durch generischer selecter prefix focus
-    switch (ctx.originalUrl) {
-        // AMS Auto-Motor-Sport
-        case PATH_DOMAIN_MAP.ams.suffixFile:
-            await blend(PATH_DOMAIN_MAP.ams)
-            break;
 
-        // www.googletagmanager.com
-        case PATH_DOMAIN_MAP.googleAdd.suffixFile:
-            await blend(PATH_DOMAIN_MAP.googleAdd)
-            break;
-
-        // www.google-analytics.com
-        case PATH_DOMAIN_MAP.googleAnalytics.suffixFile:
-            await blend(PATH_DOMAIN_MAP.googleAnalytics)
-            break;
-
-        default:
-            break;
-    }
-
-async function blend(props) {
-    let thenewsbar = PATH_DOMAIN_MAP.thenewsbar
-    let plane = await fetch(props.fullUrl + props.suffixFile)
-    let text = await plane.text()
-
-    try {
-        // AMS Auto-Motor-Sport
-        if(props.fullUrl === PATH_DOMAIN_MAP.ams.fullUrl) {
-            ctx.body = text
-                .replace(props.fullUrl + props.suffix, thenewsbar.url)
-                .replace(props.fullUrl, thenewsbar.url)
-            return next()
+        console.log(prefix !== key)
+        // 1. prüfen ob ctx.pathname mit $key beginnt
+        if(prefix !== key) {
+            // 1.1 wenn nein = continue;
+            continue;
         }
 
-        // www.googletagmanager.com
-        if(props.fullUrl === PATH_DOMAIN_MAP.googleAdd.fullUrl) {
-            // // header von der request benutzen
-            // //console.log(plane.headers)
-            // // die Header aus plane.headers extrahieren und dann übertragen
-            ctx.body = text
-                .replace(props.url, thenewsbar.url)
-                .replace(props.fullUrl, thenewsbar.url + thenewsbar.suffixFile)
-            return next()
+        const config = PATH_DOMAIN_MAP[key];
+        // 2. wenn ja, fetch(config.fullUrl + ctx.pathname.replace(new Regexp(""))
+        try {
+            const response = await fetch(config.url + config.proxyPath);
+
+            // foreach header uebertragen
+            // response.headers.map((headerName) => {
+            //     // kp ob so geht
+            //     const headerValue = response.headers.get(headerName);
+            // });
+            // alles was in headers ist muss über ctx.set(headername, headervalue); gesetzt werden
+
+
+            // todo values replacen
+            const textBody =  await response.text();
+
+
+            for(let keyInner in PATH_DOMAIN_MAP) {
+                // https://www.google-analytics.com => http://localhost:8000/googleAnalytics
+                // replace PATH_DOMAIN_MAP.fullUrl, "$REPLACEMENT_DOMAIN/$keyInner"
+            }
+
+            ctx.body = textBody;
+        } catch(e) {
+            // handle error
         }
 
-        // www.google-analytics.com
-        if(props.fullUrl === PATH_DOMAIN_MAP.googleAnalytics.fullUrl) {
-            ctx.body = text
-                .replace(props.fullUrl + props.suffix, thenewsbar.url)
-                .replace(props.suffixFile, thenewsbar.url)
-                .replace(props.urlNoHost, thenewsbar.name)   //createPolicy("google-analytics"
-                .replace("//" + props.url, thenewsbar.url)
-                .replace(props.fullUrl, thenewsbar.url + thenewsbar.suffixFile)
-                .replace(props.url, thenewsbar.url)
-                .replace(props.object, "")// googleAnalyticsObject ???
-            return next()
-        }
-    } catch (e) {
-        return e.message()
     }
-    }
+
+    // AMS Auto-Motor-Sport
+    // if(ctx.originalUrl === PATH_DOMAIN_MAP.ams.suffixFile) {
+    //     let props = PATH_DOMAIN_MAP.ams
+    //     let plane = await fetch(props.fullUrl + props.suffixFile)
+    //     let text = await plane.text()
+    //
+    //     // console.log(1, ctx.headers)
+    //     // console.log(2, plane.headers)
+    //     // plane.headers = ctx.headers;
+    //     // console.log(3, plane.headers)
+    //
+    //     //console.log(plane.headers)
+    //
+    //     console.log()
+    //     ctx.body = text
+    //         .replace(props.fullUrl + props.suffix, thenewsbar.url)
+    //         .replace(props.fullUrl, thenewsbar.url)
+    //
+    //     return next()
+    // }
+
+    // // www.googletagmanager.com
+    // if(ctx.originalUrl === PATH_DOMAIN_MAP.googleAdd.suffixFile) {
+    //     let props = PATH_DOMAIN_MAP.googleAdd
+    //     let plane = await fetch(props.fullUrl + props.suffixFile)
+    //     let text = await plane.text()
+    //     ctx.body = text
+    //         .replace(props.url, thenewsbar.url)
+    //         .replace(props.fullUrl, thenewsbar.url + thenewsbar.suffixFile)
+    //     return next()
+    // }
+    //
+    // //www.google-analytics.com
+    // if(ctx.originalUrl === PATH_DOMAIN_MAP.googleAnalytics.suffixFile) {
+    //     let props = PATH_DOMAIN_MAP.googleAnalytics
+    //     let plane = await fetch(props.fullUrl + props.suffixFile)
+    //     let text = await plane.text()
+    //     ctx.body = text
+    //         .replace(props.fullUrl + props.suffix, thenewsbar.url)
+    //         .replace(props.suffixFile, thenewsbar.url)
+    //         .replace(props.urlNoHost, thenewsbar.name)   //createPolicy("google-analytics"
+    //         .replace("//" + props.url, thenewsbar.url)
+    //         .replace(props.fullUrl, thenewsbar.url + thenewsbar.suffixFile)
+    //         .replace(props.url, thenewsbar.url)
+    //         .replace(props.object, "")// googleAnalyticsObject ???
+    //     return next()
+    // }
 });
 
 app.listen(port, function () {
     console.log(`listening on port ${port}`);
     return true
 })
+
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+}

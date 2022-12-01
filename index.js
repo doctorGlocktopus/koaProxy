@@ -82,6 +82,7 @@ app.use(async (ctx, next) => {
             const headerIterator = response.headers.entries()
 
             while (headerIterator.next().value) {
+                //console.log(headerIterator.next().value)
                 let header = headerIterator.next().value
                 ctx.set(header[0], header[1])
             }

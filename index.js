@@ -70,19 +70,18 @@ app.use(async (ctx, next) => {
         // 2. wenn ja, fetch(config.fullUrl + ctx.pathname.replace(new Regexp(""))
         try {
             const response = await fetch(config.url + config.proxyPath);
-            //2.2  alles was in headers ist muss über ctx.set(headername, headervalue); gesetzt werden
+
             const headerIterator = response.headers.entries()
             while (headerIterator.next().value) {
-                //console.log(headerIterator.next().value)
-                ctx.set(headerIterator.next().value[0], headerIterator.next().value[1])
+                let header = headerIterator.next().value
+                ctx.set(header[0], header[1])
             }
-
-
 
             // todo values replacen
             const textBody =  await response.text();
 
             // PATH_DOMAIN_MAPPEN und abhaengig von ergebniss replaces, ctx.body schicken
+
             for(let keyInner in PATH_DOMAIN_MAP) {
                 // https://www.google-analytics.com => http://localhost:8000/googleAnalytics
                 // replace PATH_DOMAIN_MAP.fullUrl, "$REPLACEMENT_DOMAIN/$keyInner"

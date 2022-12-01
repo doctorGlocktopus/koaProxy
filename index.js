@@ -17,25 +17,32 @@ const REPLACEMENT_DOMAIN = "http://localhost:8000";
 
 // PATH_DOMAIN_MAP
 const PATH_DOMAIN_MAP = {
-    "googleAdd": {
-        url: "www.googletagmanager.com",
+    "googletagmanager": {
+        url: "https://www.googletagmanager.com",
+        proxyPath: "/gtm.js?id=GTM-P9H4MZM",
+
         fullUrl: "https://www.googletagmanager.com",
         suffixFile: "/gtm.js?id=GTM-P9H4MZM",
     },
     'google-analytics': {
-        url: "www.google-analytics.com",
-        fullUrl: "https://www.google-analytics.com",
+        proxyPath: "/analytics.js",
+        url: "https://www.google-analytics.com",
+
+        // url: "www.google-analytics.com",
+        // fullUrl: "https://www.google-analytics.com",
         urlNoHost: "google-analytics",
         suffix: "/gtm/js?id=",
         suffixFile: "/analytics.js",
         object: "GoogleAnalyticsObject",
     },
     'thenewsbar': {
-        name: "thenewsbar",
         proxyPath: '/static/pw.js',
         url: "https://pw.thenewsbar.net",
+
+
+        name: "thenewsbar",
         suffixFile:'/static/pw.js',
-        suffix:'/thenewsbar'
+        suffix:'/thenewsbar',
     },
 };
 
@@ -46,7 +53,7 @@ app.use(async (ctx, next) => {
 
     // ctx.pathname = /thennewsbar/static/pw.js?v=123
     const pathParts = ctx.originalUrl.split("/").filter(Boolean);
-    console.log(pathParts)
+
     // pathParts = ["thenewsbar", "static", "pw.js?v=123"]
     const prefix = pathParts.shift();
     // pathParts = ["static", "pw.js?v=123"]
@@ -69,9 +76,11 @@ app.use(async (ctx, next) => {
 
         // 2. wenn ja, fetch(config.fullUrl + ctx.pathname.replace(new Regexp(""))
         try {
+            console.log(config.url + config.proxyPath)
             const response = await fetch(config.url + config.proxyPath);
 
             const headerIterator = response.headers.entries()
+
             while (headerIterator.next().value) {
                 let header = headerIterator.next().value
                 ctx.set(header[0], header[1])

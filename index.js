@@ -5,7 +5,7 @@ const Koa = require("koa");
 const app = new Koa();
 const port = process.env.PORT;
 
-app.use(cors())
+//app.use(cors())
 
 // erster Schritt
 
@@ -20,36 +20,20 @@ const PATH_DOMAIN_MAP = {
     "googletagmanager": {
         url: "https://www.googletagmanager.com",
         proxyPath: "/gtm.js?id=GTM-P9H4MZM",
-
-        fullUrl: "https://www.googletagmanager.com",
-        suffixFile: "/gtm.js?id=GTM-P9H4MZM",
     },
     'google-analytics': {
-        proxyPath: "/analytics.js",
         url: "https://www.google-analytics.com",
-
-        // url: "www.google-analytics.com",
-        // fullUrl: "https://www.google-analytics.com",
-        urlNoHost: "google-analytics",
-        suffix: "/gtm/js?id=",
-        suffixFile: "/analytics.js",
-        object: "GoogleAnalyticsObject",
+        proxyPath: "/analytics.js",
     },
     'thenewsbar': {
-        proxyPath: '/static/pw.js',
         url: "https://pw.thenewsbar.net",
-
-
-        name: "thenewsbar",
-        suffixFile:'/static/pw.js',
-        suffix:'/thenewsbar',
+        proxyPath: '/static/pw.js',
     },
 };
 
 
 app.use(async (ctx, next) => {
 
-    let thenewsbar = PATH_DOMAIN_MAP.thenewsbar;
 
     // ctx.pathname = /thennewsbar/static/pw.js?v=123
     const pathParts = ctx.originalUrl.split("/").filter(Boolean);
@@ -67,7 +51,7 @@ app.use(async (ctx, next) => {
 
         // 1. prüfen ob ctx.pathname mit $key beginnt
         if(prefix !== key) {
-            console.log(prefix !== key, prefix, key)
+            // console.log(prefix !== key, prefix, key)
             // 1.1 wenn nein = continue;
             continue;
         }
@@ -76,19 +60,30 @@ app.use(async (ctx, next) => {
 
         // 2. wenn ja, fetch(config.fullUrl + ctx.pathname.replace(new Regexp(""))
         try {
-            console.log(config.url + config.proxyPath)
+
+            const message = "fetch url" + config.url + config.proxyPath
+            // console.time(message)  //console.time misst die Laenge von time -> timeEnd
+
+
             const response = await fetch(config.url + config.proxyPath);
+
+
+            // ctx.set('Access-Control-Allow-Origin', '*');
 
             const headerIterator = response.headers.entries()
 
-            while (headerIterator.next().value) {
-                //console.log(headerIterator.next().value)
-                let header = headerIterator.next().value
+            for (let header of headerIterator) {
+                if(!["cache-control", "access-control-allow-credentials", "access-control-allow-headers", "access-control-allow-origin", "content-type", "cross-origin-resource-policy", "date", "expires", "last-modified"].includes(header[0])) {
+                    continue;
+                }
+                // console.log(header[0], header[1])
                 ctx.set(header[0], header[1])
             }
-
-            // todo values replacen
             const textBody =  await response.text();
+            // console.timeEnd(message)
+            // console.log(textBody.length)
+            // todo values replacen
+
 
             // PATH_DOMAIN_MAPPEN und abhaengig von ergebniss replaces, ctx.body schicken
 
@@ -99,7 +94,7 @@ app.use(async (ctx, next) => {
 
             ctx.body = textBody;
         } catch(e) {
-            // handle error
+            console.error(e)
         }
 
     }

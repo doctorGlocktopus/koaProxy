@@ -4,8 +4,10 @@ const cors = require("@koa/cors");
 const Koa = require("koa");
 const app = new Koa();
 const port = process.env.PORT;
+const PATH_DOMAIN_MAP = require('./paths');
+console.log(PATH_DOMAIN_MAP)
 
-//app.use(cors())
+// app.use(cors())
 
 // erster Schritt
 
@@ -16,24 +18,23 @@ const REPLACEMENT_DOMAIN = "http://localhost:8000";
 
 
 // PATH_DOMAIN_MAP
-const PATH_DOMAIN_MAP = {
-    "googletagmanager": {
-        url: "https://www.googletagmanager.com",
-        proxyPath: "/gtm.js?id=GTM-P9H4MZM",
-    },
-    'google-analytics': {
-        url: "https://www.google-analytics.com",
-        proxyPath: "/analytics.js",
-    },
-    'thenewsbar': {
-        url: "https://pw.thenewsbar.net",
-        proxyPath: '/static/pw.js',
-    },
-};
+// const PATH_DOMAIN_MAP = {
+//     "googletagmanager": {
+//         url: "https://www.googletagmanager.com",
+//         proxyPath: "/gtm.js?id=GTM-P9H4MZM",
+//     },
+//     'google-analytics': {
+//         url: "https://www.google-analytics.com",
+//         proxyPath: "/analytics.js",
+//     },
+//     'thenewsbar': {
+//         url: "https://pw.thenewsbar.net",
+//         proxyPath: '/static/pw.js',
+//     },
+// };
 
 
 app.use(async (ctx, next) => {
-
 
     // ctx.pathname = /thennewsbar/static/pw.js?v=123
     const pathParts = ctx.originalUrl.split("/").filter(Boolean);
@@ -51,7 +52,6 @@ app.use(async (ctx, next) => {
 
         // 1. prüfen ob ctx.pathname mit $key beginnt
         if(prefix !== key) {
-            // console.log(prefix !== key, prefix, key)
             // 1.1 wenn nein = continue;
             continue;
         }
@@ -62,13 +62,10 @@ app.use(async (ctx, next) => {
         try {
 
             const message = "fetch url" + config.url + config.proxyPath
-            // console.time(message)  //console.time misst die Laenge von time -> timeEnd
 
+            console.log(config.url + config.proxyPath)
 
             const response = await fetch(config.url + config.proxyPath);
-
-
-            // ctx.set('Access-Control-Allow-Origin', '*');
 
             const headerIterator = response.headers.entries()
 
@@ -76,12 +73,10 @@ app.use(async (ctx, next) => {
                 if(!["cache-control", "access-control-allow-credentials", "access-control-allow-headers", "access-control-allow-origin", "content-type", "cross-origin-resource-policy", "date", "expires", "last-modified"].includes(header[0])) {
                     continue;
                 }
-                // console.log(header[0], header[1])
                 ctx.set(header[0], header[1])
             }
             const textBody =  await response.text();
-            // console.timeEnd(message)
-            // console.log(textBody.length)
+
             // todo values replacen
 
 
@@ -90,9 +85,19 @@ app.use(async (ctx, next) => {
             for(let keyInner in PATH_DOMAIN_MAP) {
                 // https://www.google-analytics.com => http://localhost:8000/googleAnalytics
                 // replace PATH_DOMAIN_MAP.fullUrl, "$REPLACEMENT_DOMAIN/$keyInner"
+
+                ctx.body = textBody
+                    // .replace("google-analytics", ctx.host)
+                    // .replace("www.google-analytics.com", ctx.host)
+                    // .replace("https://www.google-analytics.com/gtm/optimize.js", ctx.host + config.proxyPath)
+                    // .replace("https://www.google-analytics.com/gtm/js?id=", ctx.host + config.proxyPath)
+                    // .replace("https://www.google-analytics.com/debug/bootstrap?id=\"+a.get(Na)+", ctx.host + config.proxyPath)
+
+                    .replace(PATH_DOMAIN_MAP[keyInner].url, ctx.host + config.proxyPath)
+                    .replace(PATH_DOMAIN_MAP[keyInner].url + PATH_DOMAIN_MAP[keyInner].proxyPath, ctx.host + PATH_DOMAIN_MAP[keyInner].proxyPath);
             }
 
-            ctx.body = textBody;
+
         } catch(e) {
             console.error(e)
         }

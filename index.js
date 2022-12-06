@@ -5,23 +5,13 @@ const Koa = require("koa");
 const app = new Koa();
 const port = process.env.PORT;
 const PATH_DOMAIN_MAP = require('./paths');
-console.log(PATH_DOMAIN_MAP)
 
 app.use(cors())
 
 app.use(async (ctx, next) => {
-
-    // ctx.pathname = /thennewsbar/static/pw.js?v=123
     const pathParts = ctx.originalUrl.split("/").filter(Boolean);
-
-    // pathParts = ["thenewsbar", "static", "pw.js?v=123"]
     const prefix = pathParts.shift();
-    // pathParts = ["static", "pw.js?v=123"]
-    // prefix = "thenewsbar"
-
     const proxyPath = "/" + pathParts.join("/");
-    // prefix = "thenewsbar"
-    // proxyPath = "/static/pw.js?v=123"
 
     for(let key in PATH_DOMAIN_MAP) {
 
@@ -33,14 +23,23 @@ app.use(async (ctx, next) => {
 
         const config = PATH_DOMAIN_MAP[key];
 
+
+
+
         // 2. wenn ja, fetch(config.fullUrl + ctx.pathname.replace(new Regexp(""))
+
         try {
+            function suffix() {
 
-            const message = "fetch url" + config.url + config.proxyPath
-
-            console.log(config.url + config.proxyPath)
-
-            const response = await fetch(config.url + config.proxyPath);
+                if(config.url === "https://www.googletagmanager.com") {
+                    let suffixCheck = config.proxyPath.replace("/", "")
+                    console.log(config.url)
+                    return pathParts[0].replace(suffixCheck, "")
+                } else {
+                    return ""
+                }
+            }
+            const response = await fetch(config.url + config.proxyPath + suffix());
 
             const headerIterator = response.headers.entries()
 
@@ -53,7 +52,6 @@ app.use(async (ctx, next) => {
             const textBody =  await response.text();
 
             // todo values replacen
-
 
             // PATH_DOMAIN_MAPPEN und abhaengig von ergebniss replaces, ctx.body schicken
 

@@ -1,7 +1,8 @@
 const PATH_DOMAIN_MAP = {
      "googletagmanager": {
          url: "https://www.googletagmanager.com",
-         proxyPath: "/gtm.js?id=GTM-P9H4MZM",
+         proxyPath: "/gtm.js",
+         //?id als suffix?   ?id=GTM-P9H4MZM
      },
      'google-analytics': {
          url: "https://www.google-analytics.com",

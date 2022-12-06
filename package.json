@@ -72,5 +72,10 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^8.29.0",
+    "eslint-config-ape": "^1.0.8",
+    "eslint-plugin-react": "^7.31.11"
+  }
 }

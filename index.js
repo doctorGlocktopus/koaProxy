@@ -23,17 +23,14 @@ app.use(async (ctx, next) => {
 
         const config = PATH_DOMAIN_MAP[key];
 
-
-
-
         // 2. wenn ja, fetch(config.fullUrl + ctx.pathname.replace(new Regexp(""))
 
         try {
             function suffix() {
 
+                // pruefen ob config.url die von atmananger.com ist, formt den suffix wegen der id ?id=GTM-P9H4MZM
                 if(config.url === "https://www.googletagmanager.com") {
                     let suffixCheck = config.proxyPath.replace("/", "")
-                    console.log(config.url)
                     return pathParts[0].replace(suffixCheck, "")
                 } else {
                     return ""
@@ -44,6 +41,7 @@ app.use(async (ctx, next) => {
             const headerIterator = response.headers.entries()
 
             for (let header of headerIterator) {
+                // whitelist fuer Header
                 if(!["cache-control", "access-control-allow-credentials", "access-control-allow-headers", "access-control-allow-origin", "content-type", "cross-origin-resource-policy", "date", "expires", "last-modified"].includes(header[0])) {
                     continue;
                 }
@@ -51,21 +49,16 @@ app.use(async (ctx, next) => {
             }
             const textBody =  await response.text();
 
-            // todo values replacen
-
-            // PATH_DOMAIN_MAPPEN und abhaengig von ergebniss replaces, ctx.body schicken
-
             for(let keyInner in PATH_DOMAIN_MAP) {
                 // https://www.google-analytics.com => http://localhost:8000/googleAnalytics
                 // replace PATH_DOMAIN_MAP.fullUrl, "$REPLACEMENT_DOMAIN/$keyInner"
 
                 ctx.body = textBody
-                    // .replace("google-analytics", ctx.host)
-                    // .replace("www.google-analytics.com", ctx.host)
                     // .replace("https://www.google-analytics.com/gtm/optimize.js", ctx.host + config.proxyPath)
                     // .replace("https://www.google-analytics.com/gtm/js?id=", ctx.host + config.proxyPath)
                     // .replace("https://www.google-analytics.com/debug/bootstrap?id=\"+a.get(Na)+", ctx.host + config.proxyPath)
 
+                    .split("google-analytics").join(ctx.host)
                     .replace(PATH_DOMAIN_MAP[keyInner].url, ctx.host + config.proxyPath)
                     .replace(PATH_DOMAIN_MAP[keyInner].url + PATH_DOMAIN_MAP[keyInner].proxyPath, ctx.host + PATH_DOMAIN_MAP[keyInner].proxyPath);
             }
